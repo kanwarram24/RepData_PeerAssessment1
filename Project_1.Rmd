@@ -1,0 +1,116 @@
+
+
+# Reproducible Research
+
+Data Analysis 
+
+## Load the data
+
+```{r cache=TRUE}
+data <- read.csv("activity.csv")
+head(data)
+
+
+```
+
+
+## What is mean total number of steps taken per day?
+
+first we take total number of steps per day
+and make histogram
+
+```{r}
+num_step <- tapply(data$steps,data$date,sum,na.rm= TRUE)
+hist(num_step,xlab = "Numbers of steps",main = "")
+```
+
+then find the mean median for the steps
+
+```{r}
+mean(num_step,na.rm = TRUE)
+
+median(num_step, na.rm = TRUE)
+```
+
+## What is the average daily activity pattern?
+
+plot of interval and average steps taken.
+
+```{r}
+avg <- aggregate(data$steps, by = list(data$interval),mean,na.rm = TRUE)
+names(avg) <- c("interval","steps")
+plot(avg$interval,avg$steps, type = "l",xlab = "interval",ylab = "steps",main = "Average")
+
+```
+
+Max number of steps in a interval
+
+```{r}
+k <- which.max(avg$steps)
+avg[k,]$interval
+```
+
+
+## Imputing missing values
+
+Calculating the number of missing values
+```{r}
+k <- is.na(data$steps)
+sum(k)
+```
+
+Filling the missing value
+
+
+There are many ways to fill the data 
+But i am using a simple one
+Inputing constant value which is mean of steps
+
+
+```{r}
+k <- mean(data$steps,na.rm = TRUE)
+newdata <- data
+newdata$steps[is.na(newdata$steps)]<- k
+head(newdata)
+```
+
+histogram of average steps of new data
+```{r}
+num_step <- tapply(newdata$steps,newdata$date,sum,na.rm= TRUE)
+hist(num_step,xlab = "Numbers of steps",main = "")
+```
+
+mean and median of new data
+```{r}
+mean(num_step,na.rm = TRUE)
+
+median(num_step, na.rm = TRUE)
+```
+
+median and mean both increase as we removed na and filled with average data
+
+## Are there differences in activity patterns between weekdays and weekends?
+
+first we add the weekday and weekend column
+
+```{r}
+newdata$date <- as.Date(newdata$date,format = "%Y-%m-%d")
+week <- sapply(newdata$date, function(d){if(weekdays(d)== "Saturday" | weekdays(d)== "Sunday"){"Weekend"}else {"Weekday"}})
+newdata <- cbind(newdata,week)
+head(newdata)
+```
+
+
+Now we plot the graph of interval and steps with weekdays
+
+
+```{r}
+data2 <- aggregate(steps~interval + week,newdata,mean)
+library("ggplot2")
+x <- ggplot(data2 , aes(x = interval,y=steps,col=week))
+x+geom_line()
+
+```
+
+
+
